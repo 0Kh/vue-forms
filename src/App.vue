@@ -221,13 +221,37 @@
                                 v-model="payment.creditCard.expirationMonth"
                             >
                                 <option
-                                    v-if="m in months"
+                                    v-for="m in months"
                                     :key="m.number"
                                     :value="m.number"
                                 >
                                     {{ m.name }}
                                 </option>
                             </select>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label for="expirationYear">Expiration year</label>
+                            <select
+                                id="expirationYear"
+                                class="form-control"
+                                v-model="payment.creditCard.expirationYear"
+                            >
+                                <option
+                                    v-for="year in years"
+                                    :key="year"
+                                    :value="year"
+                                >
+                                    {{ year }}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label for="cvv">CVV code</label>
+                            <input
+                                id="cvv"
+                                class="form-control"
+                                v-model="payment.creditCard.cvv"
+                            />
                         </div>
                     </div>
                 </div>
@@ -272,6 +296,8 @@ export default {
 
         const error = ref("");
 
+        const years = Array.from({length: 10}, (_, i) => i + 2020);
+
         function onSave() {
             error.value = "We cannot save yet, we don`t have an API";
         }
@@ -297,6 +323,7 @@ export default {
             zipcode,
             error,
             months,
+            years
         };
     }
 }

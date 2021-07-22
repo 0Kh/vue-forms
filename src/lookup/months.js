@@ -11,4 +11,4 @@ export default [
   { name: "October", number: 10 },
   { name: "November", number: 11 },
   { name: "December", number: 12 }
-]
+];
