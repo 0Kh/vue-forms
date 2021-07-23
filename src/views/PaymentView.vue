@@ -39,6 +39,7 @@
                             type="submit"
                             value="Next"
                             class="btn btn-success"
+                            :disabled="creditCardModel.$invalid"
                         />
                     </div>
                 </div>
@@ -70,8 +71,9 @@
                             id="ccNumber"
                             type="text"
                             class="form-control"
-                            v-model="payment.creditCard.number"
+                            v-model="creditCardModel.number.$model"
                         />
+                        <ValidationMessage :model="creditCardModel.number" />
                     </div>
                     <div class="form-group">
                         <label for="nameOnCard">Name on card</label>
@@ -79,8 +81,9 @@
                             id="nameOnCard"
                             type="text"
                             class="form-control"
-                            v-model="payment.creditCard.nameOnCard"
+                            v-model="creditCardModel.nameOnCard.$model"
                         />
+                        <ValidationMessage :model="creditCardModel.nameOnCard" />
                     </div>
                     <div class="form-row">
                         <div class="form-group col-md-4">
@@ -88,7 +91,7 @@
                             <select
                                 id="expirationMonth"
                                 class="form-control"
-                                v-model="payment.creditCard.expirationMonth"
+                                v-model="creditCardModel.expirationMonth.$model"
                             >
                                 <option
                                     v-for="m in months"
@@ -98,13 +101,14 @@
                                     {{ m.name }}
                                 </option>
                             </select>
+                            <ValidationMessage :model="creditCardModel.expirationMonth" />
                         </div>
                         <div class="form-group col-md-4">
                             <label for="expirationYear">Expiration year</label>
                             <select
                                 id="expirationYear"
                                 class="form-control"
-                                v-model="payment.creditCard.expirationYear"
+                                v-model="creditCardModel.expirationYear.$model"
                             >
                                 <option
                                     v-for="year in years"
@@ -114,38 +118,61 @@
                                     {{ year }}
                                 </option>
                             </select>
+                            <ValidationMessage :model="creditCardModel.expirationYear" />
                         </div>
                         <div class="form-group col-md-4">
                             <label for="cvv">CVV code</label>
                             <input
                                 id="cvv"
                                 class="form-control"
-                                v-model="payment.creditCard.cvv"
+                                v-model="creditCardModel.cvv.$model"
                             />
+                            <ValidationMessage :model="creditCardModel.cvv" />
                         </div>
                     </div>
+<!--                    <div
+                        class="text-danger"
+                        v-if="creditCardModel.$invalid"
+                    >
+                        <ul>
+                            <li
+                                v-for="e in creditCardModel.$errors"
+                                :key="e"
+                            >
+                                {{ `${e.$property}: ${e.$message}` }}
+                            </li>
+                        </ul>
+                    </div>-->
                 </div>
             </div>
         </form>
 
         <div>
-          <pre>
-              {{ payment }}
-          </pre>
+            <pre>
+                {{ payment }}
+            </pre>
+            <pre>
+                {{ creditCardModel }}
+            </pre>
         </div>
     </div>
 </template>
 <script>
-import {ref, computed, watch, reactive} from "vue";
+import { ref, computed, watch, reactive} from "vue";
 import states from "@/lookup/states";
 import formatters from "@/formatters";
 import months from "@/lookup/months";
 import AddressView from "./AddressView";
 import state from "@/state";
+import { required } from "@vuelidate/validators";
+import useVuelidate from "@vuelidate/core";
+import ValidationMessage from "../components/ValidationMessage";
+import { creditcard } from "@/validators";
 
 export default {
     components: {
-        AddressView
+        AddressView,
+        ValidationMessage
     },
 
     emits: [
@@ -170,8 +197,20 @@ export default {
 
         const years = Array.from({length: 10}, (_, i) => i + 2020);
 
-        function onSave() {
-            state.errorMessage.value = "We cannot save yet, we don`t have an API";
+        const rules = {
+            number: { required, creditcard },
+            nameOnCard: { required },
+            expirationMonth: { required },
+            expirationYear: { required },
+            cvv: { required },
+        };
+
+        const creditCardModel = useVuelidate(rules, state.creditCard);
+
+        async function onSave() {
+            if (await creditCardModel.value.$validate()) {
+                state.errorMessage.value = "We cannot save yet, we don`t have an API";
+            }
         }
 
         watch(
@@ -185,6 +224,7 @@ export default {
 
         return {
             payment,
+            creditCardModel,
             states,
             onSave,
             ...formatters,
